@@ -12,7 +12,7 @@
 struct asus_tuf_m3 {
     struct input_dev *input;
 };
-int dpi = 1;
+int mov_sens = 1;
 int scroll_sens = 1;
 int basic_control = 0xFF;
 
@@ -20,10 +20,10 @@ int basic_control = 0xFF;
 
 /* Ioctl commands */
 #define ASUS_TUF_M3_IOC_MAGIC 'm'
-#define ASUS_TUF_M3_SET_SENSITIVITY _IOW(ASUS_TUF_M3_IOC_MAGIC, 1, int)
-#define ASUS_TUF_M3_GET_SENSITIVITY _IOR(ASUS_TUF_M3_IOC_MAGIC, 2, int)
-#define ASUS_TUF_M3_SET_DPI         _IOW(ASUS_TUF_M3_IOC_MAGIC, 3, int)
-#define ASUS_TUF_M3_GET_DPI         _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_SET_SCROL_SENS  _IOW(ASUS_TUF_M3_IOC_MAGIC, 1, int)
+#define ASUS_TUF_M3_GET_SCROL_SENS  _IOR(ASUS_TUF_M3_IOC_MAGIC, 2, int)
+#define ASUS_TUF_M3_SET_MOV_SENS    _IOW(ASUS_TUF_M3_IOC_MAGIC, 3, int)
+#define ASUS_TUF_M3_GET_MOV_SENS    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
 // control over basic function
 #define ASUS_TUF_M3_DISABLE_LEFT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 5, int)
 #define ASUS_TUF_M3_ENABLE_LEFT     _IOR(ASUS_TUF_M3_IOC_MAGIC, 6, int)
@@ -93,8 +93,31 @@ static long asus_tuf_m3_ioctl(struct file *file, unsigned int cmd, unsigned long
         case ASUS_TUF_M3_ENABLE_FORW:
             basic_control |= 0x10;
             break;
-        
-        
+        // moving move
+        case ASUS_TUF_M3_SET_MOV_SENS:
+            // get modified value
+            if (copy_from_user(&mov_sens, (void __user *)arg, sizeof(mov_sens))) {
+                return -EFAULT;
+            }
+            break;
+        case ASUS_TUF_M3_GET_MOV_SENS:
+            // push value
+            if (copy_to_user((int __user *)arg, &mov_sens, sizeof(mov_sens))) {
+                return -EFAULT;
+            }
+            break;
+        case ASUS_TUF_M3_SET_SCROL_SENS:
+            // get modified value
+            if (copy_from_user(&scroll_sens, (void __user *)arg, sizeof(scroll_sens))) {
+                return -EFAULT;
+            }
+            break;
+        case ASUS_TUF_M3_GET_SCROL_SENS:
+            // push value
+            if (copy_to_user((int __user *)arg, &scroll_sens, sizeof(scroll_sens))) {
+                return -EFAULT;
+            }
+            break;
         default:
             break;
     }
@@ -172,16 +195,6 @@ static const struct hid_device_id asus_tuf_m3_id_table[] = {
 };
 MODULE_DEVICE_TABLE(hid, asus_tuf_m3_id_table);
 
-// // log information to the kernel (temporary) for debug
-// static int asus_tuf_m3_raw_event(struct hid_device *hdev, struct hid_report *report, u8 *data, int size)
-// {
-//     if (size == 8) {
-//         printk_ratelimited(KERN_INFO "ASUS TUF's HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n",
-//                            data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-//     }
-//     return 0;
-// }
-
 // handle event for mouse
 static int asus_tuf_m3_event(struct hid_device *hdev, struct hid_field *field, struct hid_usage *usage, __s32 value)
 {
@@ -213,15 +226,15 @@ static int asus_tuf_m3_event(struct hid_device *hdev, struct hid_field *field, s
 
         // Move
         case HID_GD_X:
-            input_report_rel(input, REL_X, value);
+            input_report_rel(input, REL_X, value * mov_sens);
             break;
         case HID_GD_Y:
-            input_report_rel(input, REL_Y, value);
+            input_report_rel(input, REL_Y, value * mov_sens);
             break;
 
         // Scroll
         case HID_GD_WHEEL:
-            input_report_rel(input, REL_WHEEL, value);
+            input_report_rel(input, REL_WHEEL, value * scroll_sens);
             break;
         
     }
@@ -352,7 +365,6 @@ static struct hid_driver asus_tuf_m3_driver = {
     .id_table = asus_tuf_m3_id_table,
     .probe = asus_tuf_m3_probe,
     .remove = asus_tuf_m3_remove,
-    // .raw_event = asus_tuf_m3_raw_event,
     .event = asus_tuf_m3_event,
 };
 
