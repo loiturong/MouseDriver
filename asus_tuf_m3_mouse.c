@@ -94,6 +94,26 @@ static long asus_tuf_m3_ioctl(struct file *file, unsigned int cmd, unsigned long
             basic_control |= 0x10;
             break;
         // moving move
+        case ASUS_TUF_M3_DISABLE_SCROL:
+            basic_control &= ~0x20;
+            break;
+        case ASUS_TUF_M3_ENABLE_SCROL:
+            basic_control |= 0x20;
+            break;
+        case ASUS_TUF_M3_DISABLE_X:
+            basic_control &= ~0x40;
+            break;
+        case ASUS_TUF_M3_ENABLE_X:
+            basic_control |= 0x40;
+            break;
+        case ASUS_TUF_M3_DISABLE_Y:
+            basic_control &= ~0x80;
+            break;
+        case ASUS_TUF_M3_ENABLE_Y:
+            basic_control |= 0x80;
+            break;
+        
+        // sensing sens
         case ASUS_TUF_M3_SET_MOV_SENS:
             // get modified value
             if (copy_from_user(&mov_sens, (void __user *)arg, sizeof(mov_sens))) {
@@ -223,20 +243,20 @@ static int asus_tuf_m3_event(struct hid_device *hdev, struct hid_field *field, s
             if ((basic_control & 0x10) != 0)     // forward click click allowed
                 input_report_key(input, BTN_FORWARD, value);
             break;
-
-        // Move
-        case HID_GD_X:
-            input_report_rel(input, REL_X, value * mov_sens);
-            break;
-        case HID_GD_Y:
-            input_report_rel(input, REL_Y, value * mov_sens);
-            break;
-
         // Scroll
         case HID_GD_WHEEL:
-            input_report_rel(input, REL_WHEEL, value * scroll_sens);
+            if ((basic_control & 0x20) != 0)     // forward click click allowed
+                input_report_rel(input, REL_WHEEL, value * scroll_sens);
             break;
-        
+        // Move
+        case HID_GD_X:
+            if ((basic_control & 0x40) != 0)     // forward click click allowed
+                input_report_rel(input, REL_X, value * mov_sens);
+            break;
+        case HID_GD_Y:
+            if ((basic_control & 0x80) != 0)     // forward click click allowed
+                input_report_rel(input, REL_Y, value * mov_sens);
+            break;
     }
 
     input_sync(input);
