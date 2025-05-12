@@ -11,19 +11,10 @@
 
 struct asus_tuf_m3 {
     struct input_dev *input;
-    int dpi;
-    int scroll_sens;
-    int basic_control;
 };
-
-// struct asus_tuf_m3 {
-//     struct input_dev *input;
-//     int scale_factor;    /* Scroll Sensitivity multiplier */
-//     int dpi;             /* DPI setting */
-//     struct mutex lock;   /* Protects shared data */
-//     struct cdev cdev;    /* Character device */
-//     dev_t devt;          /* Device number */
-// };
+int dpi = 1;
+int scroll_sens = 1;
+int basic_control = 0xFF;
 
 /* region character device driver */
 
@@ -34,22 +25,24 @@ struct asus_tuf_m3 {
 #define ASUS_TUF_M3_SET_DPI         _IOW(ASUS_TUF_M3_IOC_MAGIC, 3, int)
 #define ASUS_TUF_M3_GET_DPI         _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
 // control over basic function
-#define ASUS_TUF_M3_DISABLE_LEFT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_LEFT     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_RIGHT   _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_RIGHT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_MID     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_MID      _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_FORW    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_FORW     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_BACK    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_BACK     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_SCROL   _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_SCROL    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_X       _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_X        _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_DISABLE_Y       _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-#define ASUS_TUF_M3_ENABLE_Y        _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_LEFT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 5, int)
+#define ASUS_TUF_M3_ENABLE_LEFT     _IOR(ASUS_TUF_M3_IOC_MAGIC, 6, int)
+#define ASUS_TUF_M3_DISABLE_RIGHT   _IOR(ASUS_TUF_M3_IOC_MAGIC, 7, int)
+#define ASUS_TUF_M3_ENABLE_RIGHT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 8, int)
+#define ASUS_TUF_M3_DISABLE_MID     _IOR(ASUS_TUF_M3_IOC_MAGIC, 9, int)
+#define ASUS_TUF_M3_ENABLE_MID      _IOR(ASUS_TUF_M3_IOC_MAGIC, 10, int)
+#define ASUS_TUF_M3_DISABLE_FORW    _IOR(ASUS_TUF_M3_IOC_MAGIC, 11, int)
+#define ASUS_TUF_M3_ENABLE_FORW     _IOR(ASUS_TUF_M3_IOC_MAGIC, 12, int)
+#define ASUS_TUF_M3_DISABLE_BACK    _IOR(ASUS_TUF_M3_IOC_MAGIC, 13, int)
+#define ASUS_TUF_M3_ENABLE_BACK     _IOR(ASUS_TUF_M3_IOC_MAGIC, 14, int)
+#define ASUS_TUF_M3_DISABLE_SCROL   _IOR(ASUS_TUF_M3_IOC_MAGIC, 15, int)
+#define ASUS_TUF_M3_ENABLE_SCROL    _IOR(ASUS_TUF_M3_IOC_MAGIC, 16, int)
+#define ASUS_TUF_M3_DISABLE_X       _IOR(ASUS_TUF_M3_IOC_MAGIC, 17, int)
+#define ASUS_TUF_M3_ENABLE_X        _IOR(ASUS_TUF_M3_IOC_MAGIC, 18, int)
+#define ASUS_TUF_M3_DISABLE_Y       _IOR(ASUS_TUF_M3_IOC_MAGIC, 19, int)
+#define ASUS_TUF_M3_ENABLE_Y        _IOR(ASUS_TUF_M3_IOC_MAGIC, 20, int)
+#define ASUS_TUF_M3_DISABLE_ALL     _IOR(ASUS_TUF_M3_IOC_MAGIC, 21, int)
+#define ASUS_TUF_M3_ENABLE_ALL      _IOR(ASUS_TUF_M3_IOC_MAGIC, 22, int)
 
 static struct class* asus_tuf_m3_class  = NULL;
 static struct device* asus_tuf_m3_dev   = NULL;
@@ -60,6 +53,51 @@ static DEFINE_MUTEX(class_mutex);
 // in/out controll function
 static long asus_tuf_m3_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+    switch (cmd)
+    {
+        // Clicking click
+        case ASUS_TUF_M3_DISABLE_ALL:
+            basic_control &= ~0xFF;
+            break;
+        case ASUS_TUF_M3_ENABLE_ALL:
+            basic_control |= 0xFF;
+            break;
+
+        case ASUS_TUF_M3_DISABLE_LEFT:
+            basic_control &= ~0x01;
+            break;
+        case ASUS_TUF_M3_ENABLE_LEFT:
+            basic_control |= 0x01;
+            break;
+        case ASUS_TUF_M3_DISABLE_RIGHT:
+            basic_control &= ~0x02;
+            break;
+        case ASUS_TUF_M3_ENABLE_RIGHT:
+            basic_control |= 0x02;
+            break;
+        case ASUS_TUF_M3_DISABLE_MID:
+            basic_control &= ~0x04;
+            break;
+        case ASUS_TUF_M3_ENABLE_MID:
+            basic_control |= 0x04;
+            break;
+        case ASUS_TUF_M3_DISABLE_BACK:
+            basic_control &= ~0x08;
+            break;
+        case ASUS_TUF_M3_ENABLE_BACK:
+            basic_control |= 0x08;
+            break;
+        case ASUS_TUF_M3_DISABLE_FORW:
+            basic_control &= ~0x10;
+            break;
+        case ASUS_TUF_M3_ENABLE_FORW:
+            basic_control |= 0x10;
+            break;
+        
+        
+        default:
+            break;
+    }
     return 0;
 }
 
@@ -153,19 +191,24 @@ static int asus_tuf_m3_event(struct hid_device *hdev, struct hid_field *field, s
     switch (usage->hid) {
         // Button case
         case HID_UP_BUTTON | 0x0001:
-            input_report_key(input, BTN_LEFT, value);
+            if ((basic_control & 0x01) != 0)     // left click allowed
+                input_report_key(input, BTN_LEFT, value);
             break;
         case HID_UP_BUTTON | 0x0002:
-            input_report_key(input, BTN_RIGHT, value);
+            if ((basic_control & 0x02) != 0)     // right click allowed
+                input_report_key(input, BTN_RIGHT, value);
             break;
         case HID_UP_BUTTON | 0x0003:
-            input_report_key(input, BTN_MIDDLE, value);
+            if ((basic_control & 0x04) != 0)     // middle click allowed
+                input_report_key(input, BTN_MIDDLE, value);
             break;
         case HID_UP_BUTTON | 0x0004:
-            input_report_key(input, BTN_BACK, value);
+            if ((basic_control & 0x08) != 0)     // back click click allowed
+                input_report_key(input, BTN_BACK, value);
             break;
         case HID_UP_BUTTON | 0x0005:
-            input_report_key(input, BTN_FORWARD, value);
+            if ((basic_control & 0x10) != 0)     // forward click click allowed
+                input_report_key(input, BTN_FORWARD, value);
             break;
 
         // Move
@@ -299,8 +342,6 @@ static void asus_tuf_m3_remove(struct hid_device *hdev)
     hid_set_drvdata(hdev, NULL);
     hid_info(hdev, "ASUS TUF M3 disconnected\n");
     
-    // device_destroy(asus_tuf_m3_class, MKDEV(0, 0));
-    // class_destroy(asus_tuf_m3_class);
     class_created = false;
     deregister_character_driver();  // remove the character driver
 }
