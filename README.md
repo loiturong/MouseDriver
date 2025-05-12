@@ -6,7 +6,7 @@ The `asus_tuf_m3` driver is a custom HID-based kernel driver for the ASUS TUF Ga
 
 ### Supported Hardware
 
-This driver is designed specifically for the ASUS TUF Gaming M3 mouse (USB VID: 0x0B05, PID: 0x18F3). Compatibility with other ASUS mice or firmware versions is not guaranteed.
+This driver is designed specifically for the ASUS TUF Gaming M3 mouse (USB VID: 0x0B05, PID: 0x1910). Compatibility with other ASUS mice or firmware versions is not guaranteed.
 
 ### Advantages
 
@@ -18,7 +18,7 @@ This driver is designed specifically for the ASUS TUF Gaming M3 mouse (USB VID: 
 
 ### Kernel Requirements
 
-- Linux kernel version 6.11.0-25-generic or later.
+- Tested on Linux kernel version 6.11.0-25-generic. Other versions may work but are untested.
 - Required kernel configurations: `CONFIG_HID`, `CONFIG_USB_HID`, `CONFIG_INPUT`.
 
 ### Dependencies
@@ -55,6 +55,12 @@ sudo apt install gcc make linux-headers-$(uname -r)
    sudo insmod asus_tuf_m3.ko
    ```
 
+If the generic HID driver (`hid-generic`) is already bound to the mouse, unload it first:
+
+```bash
+sudo rmmod hid-generic
+```
+
 The driver automatically creates the device file `/dev/asus_tuf_m3` via `udev`. If the device file is missing, create it manually:
 
 ```bash
@@ -69,6 +75,12 @@ To unload the driver:
 
 ```bash
 sudo rmmod asus_tuf_m3
+```
+
+To restore generic HID functionality:
+
+```bash
+sudo modprobe hid-generic
 ```
 
 ### Troubleshooting
@@ -95,46 +107,46 @@ The driver communicates with the mouse via USB HID reports. Sensitivity adjustme
 
 ## IOCTL Interface
 
-The driver exposes a character device (`/dev/asus_tuf_m3`) that supports the following `ioctl` commands. All commands return 0 on success or -1 on error, setting `errno` appropriately (e.g., `EINVAL` for invalid arguments, `ENOTTY` for unrecognized commands).
+The SIMPLE driver exposes a character device (`/dev/asus_tuf_m3`) that supports the following `ioctl` commands. All commands return 0 on success or -1 on error, setting `errno` to `EFAULT` for user-space copy failures.
 
 | Command | Purpose | Input/Output | Valid Range | Default |
 | --- | --- | --- | --- | --- |
-| `ASUS_TUF_M3_SET_SCROL_SENS` | Sets scroll wheel sensitivity | `int*` (sensitivity) | 0–100 | 1 |
-| `ASUS_TUF_M3_GET_SCROL_SENS` | Gets scroll wheel sensitivity | `int*` (sensitivity) | 0–100 | 1 |
-| `ASUS_TUF_M3_SET_MOV_SENS` | Sets cursor movement sensitivity | `int` (sensitivity) | 0–100 | 1 |
-| `ASUS_TUF_M3_GET_MOV_SENS` | Gets cursor movement sensitivity | `int*` (sensitivity) | 0–100 | 1 |
-| `ASUS_TUF_M3_DISABLE_LEFT` | Disables left button | None | None | Enabled |
+| `ASUS_TUF_M3_SET_SCROL_SENS` | Sets scroll wheel sensitivity multiplier | `int` (multiplier) | Any `int` (0 disables, 1 is normal, >1 amplifies) | 1 |
+| `ASUS_TUF_M3_GET_SCROL_SENS` | Gets scroll wheel sensitivity multiplier | `int*` (multiplier) | Any `int` | 1 |
+| `ASUS_TUF_M3_SET_MOV_SENS` | Sets cursor movement sensitivity multiplier | `int` (multiplier) | Any `int` (0 disables, 1 is normal, >1 amplifies) | 1 |
+| `ASUS_TUF_M3_GET_MOV_SENS` | Gets cursor movement sensitivity multiplier | `int*` (multiplier) | Any `int` | 1 |
+| `ASUS_TUF_M3_DISABLE_LEFT` | Disables left button | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_LEFT` | Enables left button | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_RIGHT` | Disables right button | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_RIGHT` | Disables right button | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_RIGHT` | Enables right button | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_MID` | Disables middle button | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_MID` | Disables middle button | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_MID` | Enables middle button | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_FORW` | Disables forward button | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_FORW` | Disables forward button | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_FORW` | Enables forward button | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_BACK` | Disables backward button | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_BACK` | Disables backward button | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_BACK` | Enables backward button | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_SCROL` | Disables scroll wheel | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_SCROL` | Disables scroll wheel | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_SCROL` | Enables scroll wheel | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_X` | Disables X-axis movement | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_X` | Disables X-axis movement | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_X` | Enables X-axis movement | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_Y` | Disables Y-axis movement | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_Y` | Disables Y-axis movement | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_Y` | Enables Y-axis movement | None | None | Enabled |
-| `ASUS_TUF_M3_DISABLE_ALL` | Disables all buttons and movement | None | None | Enabled |
+| `ASUS_TUF_M3_DISABLE_ALL` | Disables all buttons and movement | None | None | Disabled |
 | `ASUS_TUF_M3_ENABLE_ALL` | Enables all buttons and movement | None | None | Enabled |
 
 ### Notes
 
-- **Sensitivity**: Values range from 0 (minimum sensitivity, no response) to 100 (maximum sensitivity, fastest response).
+- **Sensitivity**: Values are multipliers applied to movement (`REL_X`, `REL_Y`) or scroll (`REL_WHEEL`). A value of 0 disables the feature, 1 is the default (normal), and values >1 amplify the effect. Negative values are accepted but may cause unpredictable behavior.
 - **Button/Axis State**: Disabling a button or axis suppresses corresponding input events. For example, `ASUS_TUF_M3_DISABLE_LEFT` prevents left-click events.
-- **Error Handling**: Invalid sensitivity values (&lt;0 or &gt;100) return `EINVAL`. Unrecognized commands return `ENOTTY`.
+- **Error Handling**: Commands return `-EFAULT` if copying to/from user space fails. Unrecognized commands are ignored (return 0).
 
 ### Example
 
-Set scroll sensitivity to 50:
+Set scroll sensitivity to 2 (double the normal scroll speed):
 
 ```c
 int fd = open("/dev/asus_tuf_m3", O_RDWR);
-int value = 50;
+int value = 2;
 ioctl(fd, ASUS_TUF_M3_SET_SCROL_SENS, &value);
 close(fd);
 ```
@@ -166,7 +178,7 @@ Current scroll sensitivity is 10
 
 - **Permission denied**: Ensure the program runs with `sudo` or adjust `/dev/asus_tuf_m3` permissions.
 - **Device not found**: Verify the driver is loaded (`lsmod | grep asus_tuf_m3`) and the device file exists.
-- **IOCTL errors**: Check `errno` for details (e.g., `EINVAL` for invalid sensitivity).
+- **IOCTL errors**: Check `errno` for details (e.g., `EFAULT` for copy failures).
 
 ## Usage Examples
 
@@ -182,7 +194,6 @@ To disable a malfunctioning right button:
 
 #define DEVICE_PATH "/dev/asus_tuf_m3"
 #define ASUS_TUF_M3_DISABLE_RIGHT _IOR('m', 7, int)
-#define ASUS_TUF_M3_ENABLE_RIGHT _IOR('m', 8, int)
 
 int main() {
     int fd = open(DEVICE_PATH, O_RDWR);
@@ -203,7 +214,7 @@ int main() {
 
 ### Adjusting Sensitivity
 
-To set cursor movement sensitivity to 75:
+To set cursor movement sensitivity to 2 (double speed):
 
 ```bash
 gcc -o set_sensitivity set_sensitivity.c
@@ -225,13 +236,13 @@ int main() {
         perror("Failed to open device");
         return errno;
     }
-    int value = 75;
+    int value = 2;
     if (ioctl(fd, ASUS_TUF_M3_SET_MOV_SENS, &value) < 0) {
         perror("Failed to set movement sensitivity");
         close(fd);
         return errno;
     }
-    printf("Movement sensitivity set to 75\n");
+    printf("Movement sensitivity set to 2\n");
     close(fd);
     return 0;
 }
@@ -240,12 +251,14 @@ int main() {
 ## Limitations and Known Issues
 
 - **RGB Control**: Not supported due to proprietary firmware limitations.
-- **Rapid Sensitivity Changes**: Changing sensitivity rapidly (e.g., in a loop) may cause temporary unresponsiveness. Workaround: Add a 10ms delay between `ioctl` calls.
+- **Sensitivity Validation**: Sensitivity values are not bounds-checked, allowing negative or extreme values that may cause unpredictable behavior.
 - **Kernel Compatibility**: Tested only on kernel 6.11.0-25-generic. Older kernels may require patches.
 - **No DPI Control**: The driver does not support hardware DPI settings, only relative sensitivity adjustments.
+- **Untested Edge Cases**: Rapid `ioctl` calls or extreme sensitivity values may lead to unexpected behavior (untested).
 
-Future Improvements
+### Future Improvements
 
+- Add sensitivity validation (e.g., enforce 0–100 range) to prevent extreme values.
 - Consolidate enable/disable commands into single `ioctl` commands with a 0–1 argument to reduce the number of commands.
 - Add support for persistent configuration via module parameters or a configuration file.
 - Implement RGB control if firmware documentation becomes available.
