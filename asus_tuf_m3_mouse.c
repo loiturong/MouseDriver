@@ -10,6 +10,7 @@ struct asus_tuf_m3 {
     struct input_dev *input;
     int dpi;
     int scroll_sens;
+    int basic_control;
 };
 
 // struct asus_tuf_m3 {
@@ -23,44 +24,62 @@ struct asus_tuf_m3 {
 
 /* region character device driver */
 
-// /* Ioctl commands */
-// #define ASUS_TUF_M3_SET_SENSITIVITY _IOW(ASUS_TUF_M3_IOC_MAGIC, 1, int)
-// #define ASUS_TUF_M3_GET_SENSITIVITY _IOR(ASUS_TUF_M3_IOC_MAGIC, 2, int)
-// #define ASUS_TUF_M3_SET_DPI         _IOW(ASUS_TUF_M3_IOC_MAGIC, 3, int)
-// #define ASUS_TUF_M3_GET_DPI         _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
-// #define ASUS_TUF_M3_GET_UNKNOWN     _IOR(ASUS_TUF_M3_IOC_MAGIC, 5, u8)
+/* Ioctl commands */
+#define ASUS_TUF_M3_IOC_MAGIC 'm'
+#define ASUS_TUF_M3_SET_SENSITIVITY _IOW(ASUS_TUF_M3_IOC_MAGIC, 1, int)
+#define ASUS_TUF_M3_GET_SENSITIVITY _IOR(ASUS_TUF_M3_IOC_MAGIC, 2, int)
+#define ASUS_TUF_M3_SET_DPI         _IOW(ASUS_TUF_M3_IOC_MAGIC, 3, int)
+#define ASUS_TUF_M3_GET_DPI         _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+// control over basic function
+#define ASUS_TUF_M3_DISABLE_LEFT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_LEFT     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_RIGHT   _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_RIGHT    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_MID     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_MID      _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_FORW    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_FORW     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_BACK    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_BACK     _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_SCROL   _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_SCROL    _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_X       _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_X        _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_DISABLE_Y       _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
+#define ASUS_TUF_M3_ENABLE_Y        _IOR(ASUS_TUF_M3_IOC_MAGIC, 4, int)
 
-// static struct class *asus_tuf_m3_class;
 // static dev_t asus_tuf_m3_devt;
+static struct class* asus_tuf_m3_class  = NULL;
+static struct device* asus_tuf_m3_dev   = NULL;
+static int major_number;
 
-// // register function
-// static int asus_tuf_m3_open(struct inode *inode, struct file *file)
-// {
-//     struct asus_tuf_m3 *mouse = container_of(inode->i_cdev, struct asus_tuf_m3, cdev);
-//     file->private_data = mouse;
-//     return 0;
-// }
 
-// // unregister function
-// static int asus_tuf_m3_release(struct inode *inode, struct file *file)
-// {
-//     file->private_data = NULL;
-//     return 0;
-// }
+// in/out controll function
+static long asus_tuf_m3_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+    return 0;
+}
 
-// // in/out controll function
-// static long asus_tuf_m3_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-// {
-//     return 0;
-// }
+// register function
+static int asus_tuf_m3_open(struct inode *inode, struct file *file)
+{
+    printk(KERN_INFO "ASUS TUF M3 device opened\n");
+    return 0;
+}
 
-// // construct file operations
-// static const struct file_operations asus_tuf_m3_fops = {
-//     .owner = THIS_MODULE,
-//     .open = asus_tuf_m3_open,
-//     .release = asus_tuf_m3_release,
-//     .unlocked_ioctl = asus_tuf_m3_ioctl,
-// };
+// unregister function
+static int asus_tuf_m3_release(struct inode *inode, struct file *file)
+{
+    printk(KERN_INFO "ASUS TUF M3 device released\n");
+    return 0;
+}
+
+// construct file operations
+static const struct file_operations asus_tuf_m3_fops = {
+    .open = asus_tuf_m3_open,
+    .release = asus_tuf_m3_release,
+    .unlocked_ioctl = asus_tuf_m3_ioctl,
+};
 
 /* endregion character device driver */
 
