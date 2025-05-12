@@ -266,22 +266,7 @@ static int asus_tuf_m3_probe(struct hid_device *hdev, const struct hid_device_id
     mutex_lock(&class_mutex);
     if (!class_created) {
         /* Create character device class */
-        asus_tuf_m3_class = class_create(CLASS_NAME);
-        if (IS_ERR(asus_tuf_m3_class)) {
-            hid_err(hdev, "Failed to create class\n");
-            mutex_unlock(&class_mutex);
-            return PTR_ERR(asus_tuf_m3_class);
-        }
-
-        /* Create device (e.g., /dev/asus_tuf_m3) */
-        struct device *dev = device_create(asus_tuf_m3_class, NULL, MKDEV(0, 0), NULL, DEVICE_NAME);
-        if (IS_ERR(dev)) {
-            hid_err(hdev, "Failed to create device\n");
-            class_destroy(asus_tuf_m3_class);
-            mutex_unlock(&class_mutex);
-            return PTR_ERR(dev);
-        }
-
+        register_character_driver();
         class_created = true;
         hid_info(hdev, "Device class created\n");
     }
@@ -314,10 +299,10 @@ static void asus_tuf_m3_remove(struct hid_device *hdev)
     hid_set_drvdata(hdev, NULL);
     hid_info(hdev, "ASUS TUF M3 disconnected\n");
     
-    device_destroy(asus_tuf_m3_class, MKDEV(0, 0));
-    class_destroy(asus_tuf_m3_class);
+    // device_destroy(asus_tuf_m3_class, MKDEV(0, 0));
+    // class_destroy(asus_tuf_m3_class);
     class_created = false;
-    // deregister_character_driver();  // remove the character driver
+    deregister_character_driver();  // remove the character driver
 }
 
 // construct the driver
